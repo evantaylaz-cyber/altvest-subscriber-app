@@ -19,9 +19,9 @@ export default function Home() {
                                               <SignedIn>
                                                             <Link href="/dashboard" className="px-4 py-2 bg-primary rounded-lg hover:bg-primary/90">Dashboard</Link>Link>
                                               </SignedIn>SignedIn>
-                                  </div>div>
-                        </div>div>
-                </nav>nav>
+                                  </div>
+                        </div>
+                </nav>
                 <main className="flex-1 flex items-center justify-center px-6">
                         <div className="max-w-3xl text-center">
                                   <h2 className="text-5xl font-bold mb-6">Master the Art of Trading</h2>h2>
@@ -34,8 +34,8 @@ export default function Home() {
                                   <SignedIn>
                                               <Link href="/dashboard" className="px-8 py-4 bg-primary text-lg rounded-lg hover:bg-primary/90 inline-block">Go to Dashboard</Link>Link>
                                   </SignedIn>SignedIn>
-                        </div>div>
-                </main>main>
-          </div>div>
+                        </div>
+                </main>
+          </div>
         );
 }</div>
