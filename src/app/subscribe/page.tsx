@@ -21,8 +21,8 @@ export default function Subscribe() {
                       <div className="max-w-6xl mx-auto flex justify-between items-center">
                                 <Link href="/" className="text-2xl font-bold text-primary">AltVest</Link>Link>
                                 <Link href="/dashboard" className="text-gray-400 hover:text-white">Back to Dashboard</Link>Link>
-                      </div>div>
-              </nav>nav>
+                      </div>
+              </nav>
               <main className="max-w-2xl mx-auto px-6 py-12">
                 {!clientSecret ? (
                     <div className="text-center">
@@ -38,15 +38,15 @@ export default function Subscribe() {
                                               </ul>ul>
                                               <button onClick={startCheckout} className="w-full py-4 bg-primary rounded-lg hover:bg-primary/90 text-lg font-semibold">
                                                               Subscribe Now
-                                              </button>button>
-                                </div>div>
-                    </div>div>
+                                              </button>
+                                </div>
+                    </div>
                   ) : (
                     <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret }}>
                                 <EmbeddedCheckout />
                     </EmbeddedCheckoutProvider>EmbeddedCheckoutProvider>
                       )}
-              </main>main>
-        </div>div>
+              </main>
+        </div>
       );
 }</div>
