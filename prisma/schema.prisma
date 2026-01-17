@@ -9,22 +9,65 @@ datasource db {
 }
 
 model User {
-  id                   String    @id
-  email                String    @unique
-  tier                 String    @default("free")
-  stripeCustomerId     String?   @unique
-  stripeSubscriptionId String?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id                 String         @id @default(uuid())
+  clerkId            String         @unique
+  email              String         @unique
+  name               String?
+  stripeCustomerId   String?        @unique
+  subscriptionTier   String         @default("free") // free | premium
+  subscriptionStatus String         @default("none") // active | canceled | past_due | none
+  subscriptionId     String?
+  currentPeriodEnd   DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  progress           UserProgress[]
 }
 
-model Content {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  videoUrl    String?
-  tier        String   @default("free")
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Course {
+  id           String   @id @default(uuid())
+  title        String
+  slug         String   @unique
+  description  String?
+  thumbnailUrl String?
+  tierRequired String   @default("free") // free | premium
+  position     Int      @default(0)
+  published    Boolean  @default(false)
+  modules      Module[]
+  createdAt    DateTime @default(now())
+}
+
+model Module {
+  id       String   @id @default(uuid())
+  courseId String
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title    String
+  position Int      @default(0)
+  lessons  Lesson[]
+}
+
+model Lesson {
+  id           String         @id @default(uuid())
+  moduleId     String
+  module       Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title        String
+  slug         String
+  contentType  String         @default("video") // video | text
+  videoUrl     String?
+  textContent  String?
+  durationMins Int?
+  position     Int            @default(0)
+  isPreview    Boolean        @default(false)
+  progress     UserProgress[]
+}
+
+model UserProgress {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId    String
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  @@unique([userId, lessonId])
 }
