@@ -1,41 +1,73 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { stripe, PRICE_ID } from "@/lib/stripe";
-import { prisma } from "@/lib/db";
+import { stripe, PREMIUM_PRICE_ID } from "@/lib/stripe";
+import { db } from "@/lib/db";
 
 export async function POST() {
-    const clerkUser = await currentUser();
-    if (!clerkUser) {
-          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+      try {
+              const { userId } = await auth();
+              const clerkUser = await currentUser();
 
-  let user = await prisma.user.findUnique({ where: { id: clerkUser.id } });
-    if (!user) {
-          user = await prisma.user.create({
-                  data: { id: clerkUser.id, email: clerkUser.emailAddresses[0]?.emailAddress || "" }
-          });
-    }
+        if (!userId || !clerkUser) {
+                  return new NextResponse("Unauthorized", { status: 401 });
+        }
 
-  let customerId = user.stripeCustomerId;
-    if (!customerId) {
-          const customer = await stripe.customers.create({
-                  email: user.email,
-                  metadata: { clerkUserId: clerkUser.id }
-          });
-          customerId = customer.id;
-          await prisma.user.update({
-                  where: { id: clerkUser.id },
-                  data: { stripeCustomerId: customerId }
-          });
-    }
+        // Get or create user in database
+        let user = await db.user.findUnique({
+                  where: { clerkId: userId },
+        });
 
-  const session = await stripe.checkout.sessions.create({
-        ui_mode: "embedded",
-        customer: customerId,
-        line_items: [{ price: PRICE_ID, quantity: 1 }],
-        mode: "subscription",
-        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
-  });
+        if (!user) {
+                  user = await db.user.create({
+                              data: {
+                                            clerkId: userId,
+                                            email: clerkUser.emailAddresses[0]?.emailAddress || "",
+                                            name: clerkUser.firstName || clerkUser.username || "",
+                              },
+                  });
+        }
 
-  return NextResponse.json({ clientSecret: session.client_secret });
+        // Get or create Stripe customer
+        let stripeCustomerId = user.stripeCustomerId;
+
+        if (!stripeCustomerId) {
+                  const customer = await stripe.customers.create({
+                              email: user.email,
+                              name: user.name || undefined,
+                              metadata: {
+                                            clerkId: userId,
+                                            userId: user.id,
+                              },
+                  });
+                  stripeCustomerId = customer.id;
+
+                await db.user.update({
+                            where: { id: user.id },
+                            data: { stripeCustomerId },
+                });
+        }
+
+        // Create checkout session
+        const session = await stripe.checkout.sessions.create({
+                  customer: stripeCustomerId,
+                  line_items: [
+                      {
+                                    price: PREMIUM_PRICE_ID,
+                                    quantity: 1,
+                      },
+                            ],
+                  mode: "subscription",
+                  success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
+                  cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/account?canceled=true`,
+                  metadata: {
+                              userId: user.id,
+                              clerkId: userId,
+                  },
+        });
+
+        return NextResponse.json({ url: session.url });
+      } catch (error) {
+              console.error("[CHECKOUT_ERROR]", error);
+              return new NextResponse("Internal Error", { status: 500 });
+      }
 }
