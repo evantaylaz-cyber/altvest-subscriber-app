@@ -54,7 +54,13 @@ export default async function Dashboard() {
         
         <h2 className="text-2xl font-semibold mb-4">Your Content</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ContentCard title="Getting Started" tier="free" userTier={user.subscriptionTier} />
+          <a href="/The-AltVest-Handbook.pdf" target="_blank" rel="noopener noreferrer" className="block">
+            <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 hover:border-primary transition-colors cursor-pointer">
+              <h3 className="text-lg font-semibold mb-2">Getting Started</h3>
+              <span className="text-sm text-gray-500">Free</span>
+              <p className="text-gray-400 mt-2 text-sm">📘 The AltVest Handbook</p>
+            </div>
+          </a>
           <ContentCard title="Advanced Strategies" tier="premium" userTier={user.subscriptionTier} />
           <ContentCard title="Live Coaching" tier="premium" userTier={user.subscriptionTier} />
         </div>
